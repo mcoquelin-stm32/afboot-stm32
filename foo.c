@@ -230,9 +230,9 @@ void start_kernel(void);
 
 void start_kernel(void)
 {
-	void (*kernel)(uint32_t reserved, uint32_t mach, uint32_t dt) = (void (*)(uint32_t, uint32_t, uint32_t))(0x08021040 | 1);
+	void (*kernel)(uint32_t reserved, uint32_t mach, uint32_t dt) = (void (*)(uint32_t, uint32_t, uint32_t))(0x08008000 | 1);
 
-	kernel(0, ~0UL, 0x08020000);
+	kernel(0, ~0UL, 0x08004000);
 }
 
 #define SYSCFG_BASE	0x40013800
