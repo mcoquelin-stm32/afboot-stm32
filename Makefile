@@ -12,20 +12,20 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 LDFLAGS := -nostartfiles -Wl,--gc-sections
 
-obj-y += foo.o
+obj-y += stm32f429i-disco.o
 
-all: test.elf test
+all: stm32f429i-disco.elf test
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-test.elf: $(obj-y) Makefile
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o test.elf $(obj-y)
+stm32f429i-disco.elf: $(obj-y) Makefile
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f429i-disco.elf $(obj-y)
 
-test: test.elf Makefile
-	$(OBJCOPY) -Obinary test.elf test.bin
-	$(OBJDUMP) -S test.elf > test.lst
-	$(SIZE) test.elf
+test: stm32f429i-disco.elf Makefile
+	$(OBJCOPY) -Obinary stm32f429i-disco.elf stm32f429i-disco.bin
+	$(OBJDUMP) -S stm32f429i-disco.elf > stm32f429i-disco.lst
+	$(SIZE) stm32f429i-disco.elf
 
 clean:
 	@rm -f *.o *.elf *.bin *.lst
@@ -36,9 +36,9 @@ flash: test
 	  -c "reset init" \
 	  -c "flash probe 0" \
 	  -c "flash info 0" \
-	  -c "flash write_image erase test.bin 0x08000000" \
+	  -c "flash write_image erase stm32f429i-disco.bin 0x08000000" \
 	  -c "reset run" \
 	  -c "shutdown"
 
 debug: test
-	$(GDB) test.elf -ex "target remote :3333" -ex "monitor reset halt"
+	$(GDB) stm32f429i-disco.elf -ex "target remote :3333" -ex "monitor reset halt"
