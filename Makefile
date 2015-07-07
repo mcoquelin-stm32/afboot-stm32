@@ -12,7 +12,7 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 LDFLAGS := -nostartfiles -Wl,--gc-sections
 
-obj-y += stm32f429i-disco.o
+obj-y += stm32f429i-disco.o usart.o
 
 all: stm32f429i-disco.elf test
 

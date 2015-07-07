@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "usart.h"
+
 #define RCC_BASE	0x40023800
 
 #define RCC_CR_HSEON	(1 << 16)
@@ -48,6 +50,10 @@
 #else
 #error PLL clock does not match 180 MHz
 #endif
+
+#define USART3_BASE	0x40004800
+
+static void *usart_base = USART3_BASE;
 
 static void clock_setup(void)
 {
@@ -180,52 +186,6 @@ static void gpio_set_usart(char bank, uint8_t port)
 	gpio_set_alt(bank, port, 0, GPIOx_OSPEEDR_OSPEEDRy_FAST, 1, 0x7);
 }
 
-#define USART3_BASE	0x40004800
-
-#define USART_SR_TXE	(1 << 7)
-
-#define USART_CR1_RE	(1 << 2)
-#define USART_CR1_TE	(1 << 3)
-#define USART_CR1_UE	(1 << 13)
-
-static void usart_setup(void)
-{
-	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
-	volatile uint32_t *USART3_BRR = (void *)(USART3_BASE + 0x08);
-	volatile uint32_t *USART3_CR1 = (void *)(USART3_BASE + 0x0C);
-	volatile uint32_t *USART3_CR2 = (void *)(USART3_BASE + 0x10);
-	volatile uint32_t *USART3_CR3 = (void *)(USART3_BASE + 0x14);
-	const uint32_t apb_clk_hz = 45000000;
-	uint32_t int_div, frac_div, val;
-
-	*RCC_APB1ENR |= RCC_APB1ENR_USART3EN;
-
-	gpio_set_usart('C', 10);
-	gpio_set_usart('C', 11);
-
-	*USART3_CR1 = USART_CR1_TE | USART_CR1_RE;
-	*USART3_CR2 = 0;
-	*USART3_CR3 = 0;
-
-	int_div = (25 * apb_clk_hz) / (4 * 115200);
-	val = (int_div / 100) << 4;
-	frac_div = int_div - 100 * (val >> 4);
-	val |= ((frac_div * 16 + 50) / 100) & 0xf;
-	*USART3_BRR = val;
-
-	*USART3_CR1 |= USART_CR1_UE;
-}
-
-static void usart_putch(char ch)
-{
-	volatile uint32_t *USART3_SR  = (void *)(USART3_BASE + 0x00);
-	volatile uint32_t *USART3_DR  = (void *)(USART3_BASE + 0x04);
-
-	while (!(*USART3_SR & USART_SR_TXE)) {
-	}
-	*USART3_DR = ch;
-}
-
 void start_kernel(void);
 
 void start_kernel(void)
@@ -253,6 +213,7 @@ int main(void)
 	volatile uint32_t *FMC_SDCMR = (void *)(FMC_BASE + 0x150);
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
 	volatile uint32_t *SYSCFG_MEMRMP = (void *)(SYSCFG_BASE + 0x00);
+	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	uint32_t *ptr;
 	int i;
 
@@ -337,8 +298,13 @@ int main(void)
 	*RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	*SYSCFG_MEMRMP = SYSCFG_MEMRMP_SWP_FMC << 10;
 
-	usart_setup();
-	usart_putch('.');
+	*RCC_APB1ENR |= RCC_APB1ENR_USART3EN;
+
+	gpio_set_usart('C', 10);
+	gpio_set_usart('C', 11);
+
+	usart_setup(usart_base, 45000000);
+	usart_putch(usart_base, '.');
 
 	while (0) {
 		*GPIOG_BSRR = (1 << 13) | (1 << (14 + 16));
@@ -358,7 +324,7 @@ int main(void)
 
 static void noop(void)
 {
-	usart_putch('E');
+	usart_putch(usart_base, 'E');
 	while (1) {
 	}
 }
