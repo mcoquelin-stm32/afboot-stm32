@@ -24,8 +24,8 @@
 
 #define RCC_AHB3ENR_FMC		(1 << 0)
 
-#define RCC_APB1ENR_USART3EN	(1 << 18)
 
+#define RCC_APB2ENR_USART1EN	(1 << 4)
 #define RCC_APB2ENR_SYSCFGEN	(1 << 14)
 
 #define FLASH_BASE	0x40023C00
@@ -52,8 +52,9 @@
 #endif
 
 #define USART3_BASE	0x40004800
+#define USART1_BASE	0x40011000
 
-static void *usart_base = USART3_BASE;
+static void *usart_base = (void *)USART1_BASE;
 
 static void clock_setup(void)
 {
@@ -213,7 +214,6 @@ int main(void)
 	volatile uint32_t *FMC_SDCMR = (void *)(FMC_BASE + 0x150);
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
 	volatile uint32_t *SYSCFG_MEMRMP = (void *)(SYSCFG_BASE + 0x00);
-	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	uint32_t *ptr;
 	int i;
 
@@ -298,12 +298,12 @@ int main(void)
 	*RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	*SYSCFG_MEMRMP = SYSCFG_MEMRMP_SWP_FMC << 10;
 
-	*RCC_APB1ENR |= RCC_APB1ENR_USART3EN;
+	*RCC_APB2ENR |= RCC_APB2ENR_USART1EN;
 
-	gpio_set_usart('C', 10);
-	gpio_set_usart('C', 11);
+	gpio_set_usart('A', 9);
+	gpio_set_usart('A', 10);
 
-	usart_setup(usart_base, 45000000);
+	usart_setup(usart_base, 90000000);
 	usart_putch(usart_base, '.');
 
 	while (0) {
