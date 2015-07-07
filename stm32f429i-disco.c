@@ -62,6 +62,11 @@ static void clock_setup(void)
 	volatile uint32_t *RCC_PLLCFGR = (void *)(RCC_BASE + 0x04);
 	volatile uint32_t *RCC_CFGR = (void *)(RCC_BASE + 0x08);
 	volatile uint32_t *FLASH_ACR = (void *)(FLASH_BASE + 0x00);
+	volatile uint32_t *RCC_AHB1ENR = (void *)(RCC_BASE + 0x30);
+	volatile uint32_t *RCC_AHB2ENR = (void *)(RCC_BASE + 0x34);
+	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
+	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
+	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
 	uint32_t val;
 
 	*RCC_CR |= RCC_CR_HSEON;
@@ -109,6 +114,12 @@ static void clock_setup(void)
 #define GPIOx_OSPEEDR_OSPEEDRy_HIGH	0x3UL
 #define GPIOx_OSPEEDR_OSPEEDRy_MASK	0x3UL
 
+	/*  Enable all clocks, unused ones will be gated at end of kernel boot */
+	*RCC_AHB1ENR |= 0x7ef417ff;
+	*RCC_AHB2ENR |= 0xf1;
+	*RCC_AHB3ENR |= 0x1;
+	*RCC_APB1ENR |= 0xf6fec9ff;
+	*RCC_APB2ENR |= 0x4777f33;
 #define GPIOx_PUPDR_PUPDRy_MASK		0x3UL
 
 #define GPIOx_AFRy_MASK	0xfUL
@@ -201,8 +212,6 @@ int main(void)
 {
 	volatile uint32_t *FLASH_KEYR = (void *)(FLASH_BASE + 0x04);
 	volatile uint32_t *FLASH_CR = (void *)(FLASH_BASE + 0x10);
-	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
-	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
 	volatile uint32_t *FMC_SDCR1 = (void *)(FMC_BASE + 0x140);
 	volatile uint32_t *FMC_SDCR2 = (void *)(FMC_BASE + 0x144);
 	volatile uint32_t *FMC_SDTR1 = (void *)(FMC_BASE + 0x148);
@@ -260,7 +269,6 @@ int main(void)
 	gpio_set_fmc('G', 5);
 	gpio_set_fmc('G', 8);
 	gpio_set_fmc('G', 15);
-	*RCC_AHB3ENR |= RCC_AHB3ENR_FMC;
 	*FMC_SDCR1 = 0x00001800;
 	*FMC_SDCR2 = 0x000019D4;
 	*FMC_SDTR1 = 0x00106000;
@@ -280,10 +288,7 @@ int main(void)
 	*FMC_SDRTR = 1386 << 1; // refresh rate
 	fmc_wait_busy();
 
-	*RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	*SYSCFG_MEMRMP = SYSCFG_MEMRMP_SWP_FMC << 10;
-
-	*RCC_APB2ENR |= RCC_APB2ENR_USART1EN;
 
 	gpio_set_usart('A', 9);
 	gpio_set_usart('A', 10);
