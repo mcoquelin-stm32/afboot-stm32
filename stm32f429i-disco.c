@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "usart.h"
+#include "gpio.h"
 
 #define RCC_BASE	0x40023800
 
@@ -100,19 +101,6 @@ static void clock_setup(void)
 	*RCC_CFGR |= RCC_CFGR_SW_PLL;
 	while ((*RCC_CFGR & RCC_CFGR_SWS_MASK) != RCC_CFGR_SWS_PLL) {
 	}
-}
-
-#define GPIOA_BASE	0x40020000UL
-
-#define GPIOx_MODER_MODERy_INPUT	0x0UL
-#define GPIOx_MODER_MODERy_GPOUTPUT	0x1UL
-#define GPIOx_MODER_MODERy_ALTFUNC	0x2UL
-#define GPIOx_MODER_MODERy_ANALOG	0x3UL
-#define GPIOx_MODER_MODERy_MASK		0x3UL
-
-#define GPIOx_OSPEEDR_OSPEEDRy_FAST	0x2UL
-#define GPIOx_OSPEEDR_OSPEEDRy_HIGH	0x3UL
-#define GPIOx_OSPEEDR_OSPEEDRy_MASK	0x3UL
 
 	/*  Enable all clocks, unused ones will be gated at end of kernel boot */
 	*RCC_AHB1ENR |= 0x7ef417ff;
@@ -120,64 +108,7 @@ static void clock_setup(void)
 	*RCC_AHB3ENR |= 0x1;
 	*RCC_APB1ENR |= 0xf6fec9ff;
 	*RCC_APB2ENR |= 0x4777f33;
-#define GPIOx_PUPDR_PUPDRy_MASK		0x3UL
 
-#define GPIOx_AFRy_MASK	0xfUL
-
-static void gpio_set(char bank, uint8_t port,
-	uint8_t otype, uint8_t mode, uint8_t ospeed, uint8_t pupd)
-{
-	volatile uint32_t *RCC_AHB1ENR = (void *)(RCC_BASE + 0x30);
-	volatile uint32_t *GPIOx_base = (void *)(GPIOA_BASE + (bank - 'A') * 0x400);
-	volatile uint32_t *GPIOx_MODER   = (void *)GPIOx_base + 0x00;
-	volatile uint32_t *GPIOx_OTYPER  = (void *)GPIOx_base + 0x04;
-	volatile uint32_t *GPIOx_OSPEEDR = (void *)GPIOx_base + 0x08;
-	volatile uint32_t *GPIOx_PUPDR   = (void *)GPIOx_base + 0x0C;
-	int i;
-
-	*RCC_AHB1ENR |= 1 << (bank - 'A');
-
-	i = port;
-	*GPIOx_OTYPER &= ~(1UL << i);
-	*GPIOx_OTYPER |= (uint32_t)otype << i;
-
-	i <<= 1;
-	*GPIOx_MODER &= ~(GPIOx_MODER_MODERy_MASK << i);
-	*GPIOx_MODER |= (uint32_t)mode << i;
-	*GPIOx_OSPEEDR &= ~(GPIOx_OSPEEDR_OSPEEDRy_MASK << i);
-	*GPIOx_OSPEEDR |= (uint32_t)ospeed << i;
-	*GPIOx_PUPDR &= ~(GPIOx_PUPDR_PUPDRy_MASK << i);
-	*GPIOx_PUPDR |= (uint32_t)pupd << i;
-}
-
-static void gpio_set_alt(char bank, uint8_t port,
-	uint8_t otype, uint8_t ospeed, uint8_t pupd, uint8_t altfunc)
-{
-	volatile uint32_t *RCC_AHB1ENR = (void *)(RCC_BASE + 0x30);
-	volatile uint32_t *GPIOx_base = (void *)(GPIOA_BASE + (bank - 'A') * 0x400);
-	volatile uint32_t *GPIOx_AFRL = (void *)GPIOx_base + 0x20;
-	volatile uint32_t *GPIOx_AFRH = (void *)GPIOx_base + 0x24;
-	volatile uint32_t *GPIOx_AFR;
-	int i;
-
-	*RCC_AHB1ENR |= 1 << (bank - 'A');
-
-	if (port >= 8) {
-		GPIOx_AFR = GPIOx_AFRH;
-		i = (port - 8) * 4;
-	} else {
-		GPIOx_AFR = GPIOx_AFRL;
-		i = port * 4;
-	}
-	*GPIOx_AFR &= ~(GPIOx_AFRy_MASK << i);
-	*GPIOx_AFR |= (uint32_t)altfunc << i;
-
-	gpio_set(bank, port, otype, GPIOx_MODER_MODERy_ALTFUNC, ospeed, pupd);
-}
-
-static void gpio_set_fmc(char bank, uint8_t port)
-{
-	gpio_set_alt(bank, port, 0, GPIOx_OSPEEDR_OSPEEDRy_HIGH, 0, 0xC);
 }
 
 #define FMC_BASE	0xA0000000
@@ -190,11 +121,6 @@ static void fmc_wait_busy(void)
 
 	while ((*FMC_SDSR & FMC_SDSR_BUSY)) {
 	}
-}
-
-static void gpio_set_usart(char bank, uint8_t port)
-{
-	gpio_set_alt(bank, port, 0, GPIOx_OSPEEDR_OSPEEDRy_FAST, 1, 0x7);
 }
 
 void start_kernel(void)
