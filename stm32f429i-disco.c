@@ -98,7 +98,6 @@ static void clock_setup(void)
 }
 
 #define GPIOA_BASE	0x40020000UL
-#define GPIOG_BASE	0x40021800UL
 
 #define GPIOx_MODER_MODERy_INPUT	0x0UL
 #define GPIOx_MODER_MODERy_GPOUTPUT	0x1UL
@@ -187,8 +186,6 @@ static void gpio_set_usart(char bank, uint8_t port)
 	gpio_set_alt(bank, port, 0, GPIOx_OSPEEDR_OSPEEDRy_FAST, 1, 0x7);
 }
 
-void start_kernel(void);
-
 void start_kernel(void)
 {
 	void (*kernel)(uint32_t reserved, uint32_t mach, uint32_t dt) = (void (*)(uint32_t, uint32_t, uint32_t))(0x08008000 | 1);
@@ -206,7 +203,6 @@ int main(void)
 	volatile uint32_t *FLASH_CR = (void *)(FLASH_BASE + 0x10);
 	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
 	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
-	volatile uint32_t *GPIOG_BSRR = (void *)(GPIOG_BASE + 0x18);
 	volatile uint32_t *FMC_SDCR1 = (void *)(FMC_BASE + 0x140);
 	volatile uint32_t *FMC_SDCR2 = (void *)(FMC_BASE + 0x144);
 	volatile uint32_t *FMC_SDTR1 = (void *)(FMC_BASE + 0x148);
@@ -214,7 +210,6 @@ int main(void)
 	volatile uint32_t *FMC_SDCMR = (void *)(FMC_BASE + 0x150);
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
 	volatile uint32_t *SYSCFG_MEMRMP = (void *)(SYSCFG_BASE + 0x00);
-	uint32_t *ptr;
 	int i;
 
 	if (*FLASH_CR & FLASH_CR_LOCK) {
@@ -226,11 +221,6 @@ int main(void)
 	*FLASH_CR |= FLASH_CR_LOCK;
 
 	clock_setup();
-
-	gpio_set('G', 13, 0, GPIOx_MODER_MODERy_GPOUTPUT,
-		GPIOx_OSPEEDR_OSPEEDRy_FAST, 0);
-	gpio_set('G', 14, 0, GPIOx_MODER_MODERy_GPOUTPUT,
-		GPIOx_OSPEEDR_OSPEEDRy_FAST, 0);
 
 	gpio_set_fmc('B', 5);
 	gpio_set_fmc('B', 6);
@@ -290,11 +280,6 @@ int main(void)
 	*FMC_SDRTR = 1386 << 1; // refresh rate
 	fmc_wait_busy();
 
-	ptr = (void *)0xD0000000UL;
-	i = 0x00800000UL / sizeof(*ptr);
-	while (i-- > 0)
-		*ptr++ = 0;
-
 	*RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	*SYSCFG_MEMRMP = SYSCFG_MEMRMP_SWP_FMC << 10;
 
@@ -305,17 +290,6 @@ int main(void)
 
 	usart_setup(usart_base, 90000000);
 	usart_putch(usart_base, '.');
-
-	while (0) {
-		*GPIOG_BSRR = (1 << 13) | (1 << (14 + 16));
-		for (i = 0; i < 10000000; i++) {
-			asm volatile ("nop");
-		}
-		*GPIOG_BSRR = (1 << 14) | (1 << (13 + 16));
-		for (i = 0; i < 10000000; i++) {
-			asm volatile ("nop");
-		}
-	}
 
 	start_kernel();
 
@@ -334,8 +308,6 @@ extern unsigned int _start_data;
 extern unsigned int _end_data;
 extern unsigned int _start_bss;
 extern unsigned int _end_bss;
-
-void reset(void);
 
 void reset(void)
 {
