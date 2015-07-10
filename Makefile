@@ -12,17 +12,22 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 LDFLAGS := -nostartfiles -Wl,--gc-sections
 
-obj-y += stm32f429i-disco.o usart.o gpio.o
+obj-y += usart.o gpio.o mpu.o
 
-all: stm32f429i-disco
+all: stm32f429i-disco stm32429i-eval
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-stm32f429i-disco: $(obj-y)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f429i-disco.elf $(obj-y)
+stm32f429i-disco: stm32f429i-disco.o $(obj-y)
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-y)
 	$(OBJCOPY) -Obinary stm32f429i-disco.elf stm32f429i-disco.bin
 	$(SIZE) stm32f429i-disco.elf
+
+stm32429i-eval: stm32429i-eval.o $(obj-y)
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32429i-eval.elf stm32429i-eval.o $(obj-y)
+	$(OBJCOPY) -Obinary stm32429i-eval.elf stm32429i-eval.bin
+	$(SIZE) stm32429i-eval.elf
 
 clean:
 	@rm -f *.o *.elf *.bin *.lst
@@ -37,5 +42,18 @@ flash_stm32f429i-disco: stm32f429i-disco
 	  -c "reset run" \
 	  -c "shutdown"
 
-debug: stm32f429i-disco
+flash_stm32429i-eval: stm32429i-eval
+	$(OPENOCD) -f board/stm32429i_eval_stlink.cfg \
+	  -c "init" \
+	  -c "reset init" \
+	  -c "flash probe 0" \
+	  -c "flash info 0" \
+	  -c "flash write_image erase stm32429i-eval.bin 0x08000000" \
+	  -c "reset run" \
+	  -c "shutdown"
+
+debug_stm32f429i-disco: stm32f429i-disco
 	$(GDB) stm32f429i-disco.elf -ex "target remote :3333" -ex "monitor reset halt"
+
+debug_stm32429i-eval: stm32429i-eval
+	$(GDB) stm32429i-eval.elf -ex "target remote :3333" -ex "monitor reset halt"
