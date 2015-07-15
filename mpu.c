@@ -51,4 +51,6 @@ void mpu_config(void)
 
 	*MPU_CTRL	= MPU_CTLR_ENABLE | MPU_CTLR_PRIVDEFENA;
 
+	asm volatile ("dsb");
+	asm volatile ("isb");
 }
