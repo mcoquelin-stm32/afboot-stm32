@@ -12,22 +12,29 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 LDFLAGS := -nostartfiles -Wl,--gc-sections
 
-obj-y += usart.o gpio.o mpu.o
+obj-y += gpio.o mpu.o
+obj-f4 += $(obj-y) usart-f4.o
+obj-f7 += $(obj-y) usart-f7.o
 
-all: stm32f429i-disco stm32429i-eval
+all: stm32f429i-disco stm32429i-eval stm32746g-eval
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-stm32f429i-disco: stm32f429i-disco.o $(obj-y)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-y)
+stm32f429i-disco: stm32f429i-disco.o $(obj-f4)
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-f4)
 	$(OBJCOPY) -Obinary stm32f429i-disco.elf stm32f429i-disco.bin
 	$(SIZE) stm32f429i-disco.elf
 
-stm32429i-eval: stm32429i-eval.o $(obj-y)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32429i-eval.elf stm32429i-eval.o $(obj-y)
+stm32429i-eval: stm32429i-eval.o $(obj-f4)
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32429i-eval.elf stm32429i-eval.o $(obj-f4)
 	$(OBJCOPY) -Obinary stm32429i-eval.elf stm32429i-eval.bin
 	$(SIZE) stm32429i-eval.elf
+
+stm32746g-eval: stm32746g-eval.o $(obj-f7)
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32746g-eval.elf stm32746g-eval.o $(obj-f7)
+	$(OBJCOPY) -Obinary stm32746g-eval.elf stm32746g-eval.bin
+	$(SIZE) stm32746g-eval.elf
 
 clean:
 	@rm -f *.o *.elf *.bin *.lst
@@ -43,7 +50,7 @@ flash_stm32f429i-disco: stm32f429i-disco
 	  -c "shutdown"
 
 flash_stm32429i-eval: stm32429i-eval
-	$(OPENOCD) -f board/stm32429i_eval_stlink.cfg \
+	$(OPENOCD) -f board/stm32469i_eval_stlink.cfg \
 	  -c "init" \
 	  -c "reset init" \
 	  -c "flash probe 0" \
@@ -52,8 +59,22 @@ flash_stm32429i-eval: stm32429i-eval
 	  -c "reset run" \
 	  -c "shutdown"
 
+flash_stm32746g-eval: stm32746g-eval
+	$(OPENOCD) -f board/stm32746g_eval_stlink.cfg \
+	  -c "init" \
+	  -c "reset init" \
+	  -c "flash probe 0" \
+	  -c "flash info 0" \
+	  -c "flash write_image erase stm32746g-eval.bin 0x08000000" \
+	  -c "reset run" \
+	  -c "shutdown"
+
 debug_stm32f429i-disco: stm32f429i-disco
 	$(GDB) stm32f429i-disco.elf -ex "target remote :3333" -ex "monitor reset halt"
 
 debug_stm32429i-eval: stm32429i-eval
 	$(GDB) stm32429i-eval.elf -ex "target remote :3333" -ex "monitor reset halt"
+
+
+debug_stm32746g-eval: stm32746g-eval
+	$(GDB) stm32746g-eval.elf -ex "target remote :3333" -ex "monitor reset halt"
