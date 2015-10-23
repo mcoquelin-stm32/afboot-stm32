@@ -50,7 +50,7 @@ flash_stm32f429i-disco: stm32f429i-disco
 	  -c "shutdown"
 
 flash_stm32429i-eval: stm32429i-eval
-	$(OPENOCD) -f board/stm32469i_eval_stlink.cfg \
+	$(OPENOCD) -f board/stm32429i_eval_stlink.cfg \
 	  -c "init" \
 	  -c "reset init" \
 	  -c "flash probe 0" \
