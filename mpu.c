@@ -43,7 +43,7 @@ void mpu_config(void)
 
 	/* Configure external SDRAM */
 	*MPU_RNR	= 0x0;
-	*MPU_RBAR	= 0xc0000000;
+	*MPU_RBAR	= 0x00000000;
 	*MPU_RASR	= MPU_RASR_AP_RWRW |
 					MPU_RASR_EXT_RAM_ATTR |
 					MPU_RASR_SIZE_256M |

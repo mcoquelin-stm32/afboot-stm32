@@ -100,6 +100,7 @@ int main(void)
 	volatile uint32_t *FMC_SDTR1 = (void *)(FMC_BASE + 0x148);
 	volatile uint32_t *FMC_SDCMR = (void *)(FMC_BASE + 0x150);
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
+	volatile uint32_t *SYSCFG_MEMRMP = (void *)(SYSCFG_BASE + 0x00);
 	int i;
 
 	mpu_config();
@@ -199,6 +200,8 @@ int main(void)
 
 	usart_setup(usart_base, 90000000);
 	usart_putch(usart_base, '.');
+
+	*SYSCFG_MEMRMP = 0x4;
 
 	start_kernel();
 
