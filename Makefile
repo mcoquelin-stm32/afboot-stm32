@@ -16,7 +16,7 @@ obj-y += gpio.o mpu.o
 obj-f4 += $(obj-y) usart-f4.o
 obj-f7 += $(obj-y) usart-f7.o
 
-all: stm32f429i-disco stm32429i-eval stm32746g-eval
+all: stm32f429i-disco stm32429i-eval stm32f469i-disco stm32746g-eval
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -30,6 +30,11 @@ stm32429i-eval: stm32429i-eval.o $(obj-f4)
 	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32429i-eval.elf stm32429i-eval.o $(obj-f4)
 	$(OBJCOPY) -Obinary stm32429i-eval.elf stm32429i-eval.bin
 	$(SIZE) stm32429i-eval.elf
+
+stm32f469i-disco: stm32f469i-disco.o $(obj-f4)
+	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f469i-disco.elf stm32f469i-disco.o $(obj-f4)
+	$(OBJCOPY) -Obinary stm32f469i-disco.elf stm32f469i-disco.bin
+	$(SIZE) stm32f469i-disco.elf
 
 stm32746g-eval: stm32746g-eval.o $(obj-f7)
 	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32746g-eval.elf stm32746g-eval.o $(obj-f7)
@@ -59,6 +64,16 @@ flash_stm32429i-eval: stm32429i-eval
 	  -c "reset run" \
 	  -c "shutdown"
 
+flash_stm32f469i-disco: stm32f469i-disco
+	$(OPENOCD) -f board/stm32f469discovery.cfg \
+	  -c "init" \
+	  -c "reset init" \
+	  -c "flash probe 0" \
+	  -c "flash info 0" \
+	  -c "flash write_image erase stm32f469i-disco.bin 0x08000000" \
+	  -c "reset run" \
+	  -c "shutdown"
+
 flash_stm32746g-eval: stm32746g-eval
 	$(OPENOCD) -f board/stm32746g_eval_stlink.cfg \
 	  -c "init" \
@@ -75,6 +90,8 @@ debug_stm32f429i-disco: stm32f429i-disco
 debug_stm32429i-eval: stm32429i-eval
 	$(GDB) stm32429i-eval.elf -ex "target remote :3333" -ex "monitor reset halt"
 
+debug_stm32f469i-disco: stm32f469i-disco
+	$(GDB) stm32f469i-disco.elf -ex "target remote :3333" -ex "monitor reset halt"
 
 debug_stm32746g-eval: stm32746g-eval
 	$(GDB) stm32746g-eval.elf -ex "target remote :3333" -ex "monitor reset halt"
