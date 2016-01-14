@@ -34,8 +34,7 @@ static void clock_setup(void)
 	uint32_t val;
 
 	*RCC_CR |= RCC_CR_HSEON;
-	while (!(*RCC_CR & RCC_CR_HSERDY)) {
-	}
+	while (!(*RCC_CR & RCC_CR_HSERDY));
 
 	val = *RCC_CFGR;
 	val &= ~RCC_CFGR_HPRE_MASK;

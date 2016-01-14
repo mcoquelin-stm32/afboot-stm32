@@ -56,8 +56,7 @@ static void clock_setup(void)
 	*RCC_PLLCFGR = val;
 
 	*RCC_CR |= RCC_CR_PLLON;
-	while (*RCC_CR & RCC_CR_PLLRDY) {
-	}
+	while (!(*RCC_CR & RCC_CR_PLLRDY));
 
 	*FLASH_ACR = FLASH_ACR_ICEN | FLASH_ACR_PRFTEN | FLASH_LATENCY;
 
