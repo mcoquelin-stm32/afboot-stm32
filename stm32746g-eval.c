@@ -199,6 +199,7 @@ int main(void)
 	usart_setup(usart_base, 108000000);
 	usart_putch(usart_base, '.');
 
+	while (1);
 	start_kernel();
 
 	return 0;
