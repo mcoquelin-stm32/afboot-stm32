@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void mpu_config(void);
+void mpu_config(uint32_t sdram_base);
 
 #endif /* _MPU_H */

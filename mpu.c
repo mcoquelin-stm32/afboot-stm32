@@ -34,7 +34,7 @@
 #define MPU_RASR_PERIPH_ATTR		MPU_RASR_PERM_ATTRS(0, 0, 1, 1)
 #define MPU_RASR_PRIV_PERIPH_ATTR	MPU_RASR_PERM_ATTRS(0, 0, 0, 0)
 
-void mpu_config(void)
+void mpu_config(uint32_t sdram_base)
 {
 	volatile uint32_t *MPU_CTRL = (void *)(MPU_BASE + 0x04);
 	volatile uint32_t *MPU_RNR  = (void *)(MPU_BASE + 0x08);
@@ -43,7 +43,7 @@ void mpu_config(void)
 
 	/* Configure external SDRAM */
 	*MPU_RNR	= 0x0;
-	*MPU_RBAR	= 0x00000000;
+	*MPU_RBAR	= sdram_base;
 	*MPU_RASR	= MPU_RASR_AP_RWRW |
 					MPU_RASR_EXT_RAM_ATTR |
 					MPU_RASR_SIZE_256M |

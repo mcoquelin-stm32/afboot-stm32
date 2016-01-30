@@ -102,7 +102,7 @@ int main(void)
 	volatile uint32_t *SYSCFG_MEMRMP = (void *)(SYSCFG_BASE + 0x00);
 	int i;
 
-	mpu_config();
+	mpu_config(0x0);
 
 	if (*FLASH_CR & FLASH_CR_LOCK) {
 		*FLASH_KEYR = 0x45670123;

@@ -100,15 +100,7 @@ int main(void)
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
 	int i;
 
-	/*
-	 * Don't understand whether it is a compiler or hardware related,
-	 * but without the nop, it takes up to 9 seconds to arrive to
-	 * usart_putchar() first call. The nop can be done up to first
-	 * fmc_wait_busy() call... If any idea please let me know.
-	 * For information, I am using arm-none-eabi-gcc 4.9.3 20141119
-	 */
-	asm volatile ("nop");
-	mpu_config();
+	mpu_config(0xc0000000);
 
 	if (*FLASH_CR & FLASH_CR_LOCK) {
 		*FLASH_KEYR = 0x45670123;
