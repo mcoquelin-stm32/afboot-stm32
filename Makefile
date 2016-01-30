@@ -75,7 +75,7 @@ flash_stm32f469i-disco: stm32f469i-disco
 	  -c "shutdown"
 
 flash_stm32746g-eval: stm32746g-eval
-	$(OPENOCD) -f board/stm32746g_eval_stlink.cfg \
+	$(OPENOCD) -f interface/stlink-v2-1.cfg -f board/stm327x6g_eval.cfg \
 	  -c "init" \
 	  -c "reset init" \
 	  -c "flash probe 0" \
