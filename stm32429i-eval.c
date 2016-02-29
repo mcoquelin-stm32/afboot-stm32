@@ -116,6 +116,10 @@ int main(void)
 
 	gpio_set_fmc('D', 0); //D2
 	gpio_set_fmc('D', 1); //D3
+	gpio_set_fmc('D', 4); //NOE
+	gpio_set_fmc('D', 5); //NWE
+	gpio_set_fmc('D', 6); //NWAIT
+	gpio_set_fmc('D', 7); //NE1
 	gpio_set_fmc('D', 8); //D13
 	gpio_set_fmc('D', 9); //D14
 	gpio_set_fmc('D', 10); //D15
