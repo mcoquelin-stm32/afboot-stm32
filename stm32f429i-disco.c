@@ -7,14 +7,14 @@
 
 #define CONFIG_HSE_HZ	8000000
 #define CONFIG_PLL_M	8
-#define CONFIG_PLL_N	360
+#define CONFIG_PLL_N	336
 #define CONFIG_PLL_P	2
 #define CONFIG_PLL_Q	7
 #define PLLCLK_HZ (((CONFIG_HSE_HZ / CONFIG_PLL_M) * CONFIG_PLL_N) / CONFIG_PLL_P)
-#if PLLCLK_HZ == 180000000
+#if PLLCLK_HZ == 168000000
 #define FLASH_LATENCY	5
 #else
-#error PLL clock does not match 180 MHz
+#error PLL clock does not match 168 MHz
 #endif
 
 static void *usart_base = (void *)USART1_BASE;
@@ -175,7 +175,7 @@ int main(void)
 	gpio_set_usart('A', 9);
 	gpio_set_usart('A', 10);
 
-	usart_setup(usart_base, 90000000);
+	usart_setup(usart_base, PLLCLK_HZ/2);
 	usart_putch(usart_base, '.');
 
 	start_kernel();
