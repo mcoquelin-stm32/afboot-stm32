@@ -30,6 +30,7 @@ static void clock_setup(void)
 	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
 	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
+	volatile uint32_t *RCC_AHB1LPENR= (void *)(RCC_BASE + 0x50);
 	uint32_t val;
 
 	*RCC_CR |= RCC_CR_HSEON;
@@ -70,6 +71,9 @@ static void clock_setup(void)
 	*RCC_APB1ENR |= 0xf6fec9ff;
 	*RCC_APB2ENR |= 0x4777f33;
 
+	/* Clear bit OTGHSULPILPEN in register AHB1LPENR when OTG HS in FS mode with internal PHY */
+  	/* https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2Fcortex_mx_stm32%2FPower%20consumption%20without%20low%20power&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=469 */
+	*RCC_AHB1LPENR &= ~RCC_AHB1LPENR_OTGHSULPILPEN;
 }
 
 

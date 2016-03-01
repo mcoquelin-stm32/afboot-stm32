@@ -20,6 +20,8 @@
 
 #define RCC_AHB1ENR_GPIOGEN	(1 << 6)
 
+#define RCC_AHB1LPENR_OTGHSULPILPEN	(1 << 30)
+
 #define RCC_AHB3ENR_FMC		(1 << 0)
 
 
@@ -46,5 +48,6 @@
 
 #define SYSCFG_BASE	0x40013800
 #define SYSCFG_MEMRMP_SWP_FMC	0x1
+
 
 #endif /* _STM32F4_REGS_H */
