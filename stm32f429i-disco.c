@@ -7,14 +7,14 @@
 
 #define CONFIG_HSE_HZ	8000000
 #define CONFIG_PLL_M	8
-#define CONFIG_PLL_N	360
+#define CONFIG_PLL_N	336
 #define CONFIG_PLL_P	2
 #define CONFIG_PLL_Q	7
 #define PLLCLK_HZ (((CONFIG_HSE_HZ / CONFIG_PLL_M) * CONFIG_PLL_N) / CONFIG_PLL_P)
-#if PLLCLK_HZ == 180000000
+#if PLLCLK_HZ == 168000000
 #define FLASH_LATENCY	5
 #else
-#error PLL clock does not match 180 MHz
+#error PLL clock does not match 168 MHz
 #endif
 
 static void *usart_base = (void *)USART1_BASE;
@@ -30,6 +30,7 @@ static void clock_setup(void)
 	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
 	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
+	volatile uint32_t *RCC_AHB1LPENR= (void *)(RCC_BASE + 0x50);
 	uint32_t val;
 
 	*RCC_CR |= RCC_CR_HSEON;
@@ -70,6 +71,9 @@ static void clock_setup(void)
 	*RCC_APB1ENR |= 0xf6fec9ff;
 	*RCC_APB2ENR |= 0x4777f33;
 
+	/* Clear bit OTGHSULPILPEN in register AHB1LPENR when OTG HS in FS mode with internal PHY */
+  	/* https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2Fcortex_mx_stm32%2FPower%20consumption%20without%20low%20power&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=469 */
+	*RCC_AHB1LPENR &= ~RCC_AHB1LPENR_OTGHSULPILPEN;
 }
 
 
@@ -175,7 +179,7 @@ int main(void)
 	gpio_set_usart('A', 9);
 	gpio_set_usart('A', 10);
 
-	usart_setup(usart_base, 90000000);
+	usart_setup(usart_base, PLLCLK_HZ/2);
 	usart_putch(usart_base, '.');
 
 	start_kernel();
