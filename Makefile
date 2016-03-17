@@ -1,6 +1,7 @@
 CROSS_COMPILE ?= arm-none-eabi-
 
 CC = $(CROSS_COMPILE)gcc
+LD = $(CROSS_COMPILE)ld
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 SIZE = $(CROSS_COMPILE)size
@@ -10,7 +11,7 @@ OPENOCD = openocd
 CFLAGS := -mthumb -mcpu=cortex-m4
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
-LDFLAGS := -nostartfiles -Wl,--gc-sections
+LINKERFLAGS := -nostartfiles --gc-sections
 
 obj-y += gpio.o mpu.o
 obj-f4 += $(obj-y) usart-f4.o
@@ -22,22 +23,22 @@ all: stm32f429i-disco stm32429i-eval stm32f469i-disco stm32746g-eval
 	$(CC) -c $(CFLAGS) $< -o $@
 
 stm32f429i-disco: stm32f429i-disco.o $(obj-f4)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-f4)
+	$(LD) -T stm32f429.lds $(LINKERFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-f4)
 	$(OBJCOPY) -Obinary stm32f429i-disco.elf stm32f429i-disco.bin
 	$(SIZE) stm32f429i-disco.elf
 
 stm32429i-eval: stm32429i-eval.o $(obj-f4)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32429i-eval.elf stm32429i-eval.o $(obj-f4)
+	$(LD) -T stm32f429.lds $(LINKERFLAGS) -o stm32429i-eval.elf stm32429i-eval.o $(obj-f4)
 	$(OBJCOPY) -Obinary stm32429i-eval.elf stm32429i-eval.bin
 	$(SIZE) stm32429i-eval.elf
 
 stm32f469i-disco: stm32f469i-disco.o $(obj-f4)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32f469i-disco.elf stm32f469i-disco.o $(obj-f4)
+	$(LD) -T stm32f429.lds $(LINKERFLAGS) -o stm32f469i-disco.elf stm32f469i-disco.o $(obj-f4)
 	$(OBJCOPY) -Obinary stm32f469i-disco.elf stm32f469i-disco.bin
 	$(SIZE) stm32f469i-disco.elf
 
 stm32746g-eval: stm32746g-eval.o $(obj-f7)
-	$(CC) -T stm32f429.lds $(LDFLAGS) -o stm32746g-eval.elf stm32746g-eval.o $(obj-f7)
+	$(LD) -T stm32f429.lds $(LINKERFLAGS) -o stm32746g-eval.elf stm32746g-eval.o $(obj-f7)
 	$(OBJCOPY) -Obinary stm32746g-eval.elf stm32746g-eval.bin
 	$(SIZE) stm32746g-eval.elf
 
