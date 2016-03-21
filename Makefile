@@ -13,7 +13,7 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 LINKERFLAGS := -nostartfiles --gc-sections
 
-obj-y += gpio.o mpu.o
+obj-y += gpio.o mpu.o qspi.o
 obj-f4 += $(obj-y) usart-f4.o
 obj-f7 += $(obj-y) usart-f7.o
 

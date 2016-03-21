@@ -52,6 +52,10 @@ void gpio_set_fmc(char bank, uint8_t port)
 	gpio_set_alt(bank, port, 0, GPIOx_OSPEEDR_OSPEEDRy_HIGH, 0, 0xC);
 }
 
+void gpio_set_qspi(char bank, uint8_t port, uint8_t pupd, uint8_t altfunc)
+{
+	gpio_set_alt(bank, port, 0, GPIOx_OSPEEDR_OSPEEDRy_HIGH, pupd, altfunc);
+}
 
 void gpio_set_usart(char bank, uint8_t port)
 {
