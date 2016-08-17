@@ -12,11 +12,19 @@
 #define CONFIG_PLL_N	360
 #define CONFIG_PLL_P	2
 #define CONFIG_PLL_Q	7
+#define CONFIG_PLLSAI_N 192
+#define CONFIG_PLLSAI_P 4
 #define PLLCLK_HZ (((CONFIG_HSE_HZ / CONFIG_PLL_M) * CONFIG_PLL_N) / CONFIG_PLL_P)
+#define PLLSAICLK_HZ (((CONFIG_HSE_HZ / CONFIG_PLL_M) * CONFIG_PLLSAI_N) / CONFIG_PLLSAI_P)
+
 #if PLLCLK_HZ == 180000000
 #define FLASH_LATENCY	5
 #else
 #error PLL clock does not match 180 MHz
+#endif
+
+#if PLLSAICLK_HZ != 48000000
+#error PLLSAI clock does not match 48MHz
 #endif
 
 static void *usart_base = (void *)USART3_BASE;
@@ -32,6 +40,8 @@ static void clock_setup(void)
 	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
 	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
+	volatile uint32_t *RCC_PLLSAICFGR = (void *)(RCC_BASE + 0x88);
+	volatile uint32_t *RCC_DCKCFGR = (void *)(RCC_BASE + 0x8C);
 	uint32_t val;
 
 	*RCC_CR |= RCC_CR_HSEON;
@@ -55,8 +65,18 @@ static void clock_setup(void)
 	val |= CONFIG_PLL_Q << 24;
 	*RCC_PLLCFGR = val;
 
+	val = 0;
+	val |= CONFIG_PLLSAI_N << 6;
+	val |= ((CONFIG_PLLSAI_P >> 1)- 1) << 16;
+	*RCC_PLLSAICFGR = val;
+
 	*RCC_CR |= RCC_CR_PLLON;
 	while (!(*RCC_CR & RCC_CR_PLLRDY));
+
+	*RCC_CR |= RCC_CR_SAION;
+	while (!(*RCC_CR & RCC_CR_SAIRDY)) {
+	}
+	*RCC_DCKCFGR |= RCC_DCKCFGR_48SRC_SAI;
 
 	*FLASH_ACR = FLASH_ACR_ICEN | FLASH_ACR_PRFTEN | FLASH_LATENCY;
 
@@ -361,4 +381,3 @@ void (*vector_table[16 + 91])(void) = {
 	noop,
 	noop,
 };
-
