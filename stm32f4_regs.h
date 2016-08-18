@@ -21,6 +21,7 @@
 #define RCC_CFGR_PPRE2_MASK	(0x7 << 13)
 
 #define RCC_DCKCFGR_48SRC_SAI	(1 << 27)
+#define RCC_DCKCFGR_SDIO48	(1 << 28)
 
 #define RCC_AHB1ENR_GPIOGEN	(1 << 6)
 
