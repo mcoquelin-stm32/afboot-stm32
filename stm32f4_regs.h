@@ -7,6 +7,8 @@
 #define RCC_CR_HSERDY	(1 << 17)
 #define RCC_CR_PLLON	(1 << 24)
 #define RCC_CR_PLLRDY	(1 << 25)
+#define RCC_CR_SAION	(1 << 28)
+#define RCC_CR_SAIRDY	(1 << 29)
 
 #define RCC_PLLCFGR_PLLSRC_HSE	(1 << 22)
 
@@ -17,6 +19,9 @@
 #define RCC_CFGR_HPRE_MASK	(0xf << 4)
 #define RCC_CFGR_PPRE1_MASK	(0x7 << 10)
 #define RCC_CFGR_PPRE2_MASK	(0x7 << 13)
+
+#define RCC_DCKCFGR_48SRC_SAI	(1 << 27)
+#define RCC_DCKCFGR_SDIO48	(1 << 28)
 
 #define RCC_AHB1ENR_GPIOGEN	(1 << 6)
 
