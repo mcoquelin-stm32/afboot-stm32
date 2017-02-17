@@ -19,6 +19,7 @@
 #endif
 
 static void *usart_base = (void *)USART1_BASE;
+static void *gpio_base = (void *)GPIOA_BASE;
 
 static void clock_setup(void)
 {
@@ -110,44 +111,44 @@ int main(void)
 
 	clock_setup();
 
-	gpio_set_fmc('B', 5);
-	gpio_set_fmc('B', 6);
-	gpio_set_fmc('C', 0);
-	gpio_set_fmc('D', 0);
-	gpio_set_fmc('D', 1);
-	gpio_set_fmc('D', 8);
-	gpio_set_fmc('D', 9);
-	gpio_set_fmc('D', 10);
-	gpio_set_fmc('D', 14);
-	gpio_set_fmc('D', 15);
-	gpio_set_fmc('E', 0);
-	gpio_set_fmc('E', 1);
-	gpio_set_fmc('E', 7);
-	gpio_set_fmc('E', 8);
-	gpio_set_fmc('E', 9);
-	gpio_set_fmc('E', 10);
-	gpio_set_fmc('E', 11);
-	gpio_set_fmc('E', 12);
-	gpio_set_fmc('E', 13);
-	gpio_set_fmc('E', 14);
-	gpio_set_fmc('E', 15);
-	gpio_set_fmc('F', 0);
-	gpio_set_fmc('F', 1);
-	gpio_set_fmc('F', 2);
-	gpio_set_fmc('F', 3);
-	gpio_set_fmc('F', 4);
-	gpio_set_fmc('F', 5);
-	gpio_set_fmc('F', 11);
-	gpio_set_fmc('F', 12);
-	gpio_set_fmc('F', 13);
-	gpio_set_fmc('F', 14);
-	gpio_set_fmc('F', 15);
-	gpio_set_fmc('G', 0);
-	gpio_set_fmc('G', 1);
-	gpio_set_fmc('G', 4);
-	gpio_set_fmc('G', 5);
-	gpio_set_fmc('G', 8);
-	gpio_set_fmc('G', 15);
+	gpio_set_fmc(gpio_base, 'B', 5);
+	gpio_set_fmc(gpio_base, 'B', 6);
+	gpio_set_fmc(gpio_base, 'C', 0);
+	gpio_set_fmc(gpio_base, 'D', 0);
+	gpio_set_fmc(gpio_base, 'D', 1);
+	gpio_set_fmc(gpio_base, 'D', 8);
+	gpio_set_fmc(gpio_base, 'D', 9);
+	gpio_set_fmc(gpio_base, 'D', 10);
+	gpio_set_fmc(gpio_base, 'D', 14);
+	gpio_set_fmc(gpio_base, 'D', 15);
+	gpio_set_fmc(gpio_base, 'E', 0);
+	gpio_set_fmc(gpio_base, 'E', 1);
+	gpio_set_fmc(gpio_base, 'E', 7);
+	gpio_set_fmc(gpio_base, 'E', 8);
+	gpio_set_fmc(gpio_base, 'E', 9);
+	gpio_set_fmc(gpio_base, 'E', 10);
+	gpio_set_fmc(gpio_base, 'E', 11);
+	gpio_set_fmc(gpio_base, 'E', 12);
+	gpio_set_fmc(gpio_base, 'E', 13);
+	gpio_set_fmc(gpio_base, 'E', 14);
+	gpio_set_fmc(gpio_base, 'E', 15);
+	gpio_set_fmc(gpio_base, 'F', 0);
+	gpio_set_fmc(gpio_base, 'F', 1);
+	gpio_set_fmc(gpio_base, 'F', 2);
+	gpio_set_fmc(gpio_base, 'F', 3);
+	gpio_set_fmc(gpio_base, 'F', 4);
+	gpio_set_fmc(gpio_base, 'F', 5);
+	gpio_set_fmc(gpio_base, 'F', 11);
+	gpio_set_fmc(gpio_base, 'F', 12);
+	gpio_set_fmc(gpio_base, 'F', 13);
+	gpio_set_fmc(gpio_base, 'F', 14);
+	gpio_set_fmc(gpio_base, 'F', 15);
+	gpio_set_fmc(gpio_base, 'G', 0);
+	gpio_set_fmc(gpio_base, 'G', 1);
+	gpio_set_fmc(gpio_base, 'G', 4);
+	gpio_set_fmc(gpio_base, 'G', 5);
+	gpio_set_fmc(gpio_base, 'G', 8);
+	gpio_set_fmc(gpio_base, 'G', 15);
 	*FMC_SDCR1 = 0x00001800;
 	*FMC_SDCR2 = 0x000019D4;
 	*FMC_SDTR1 = 0x00106000;
@@ -169,8 +170,8 @@ int main(void)
 
 	*SYSCFG_MEMRMP = SYSCFG_MEMRMP_SWP_FMC << 10;
 
-	gpio_set_usart('A', 9);
-	gpio_set_usart('A', 10);
+	gpio_set_usart(gpio_base, 'A', 9, 7);
+	gpio_set_usart(gpio_base, 'A', 10, 7);
 
 	usart_setup(usart_base, PLLCLK_HZ/2);
 	usart_putch(usart_base, '.');
