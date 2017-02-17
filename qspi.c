@@ -60,7 +60,6 @@ void quadspi_init(struct qspi_params *params)
 	volatile uint32_t *QUADSPI_PSMKR	= (void *)QUADSPI_BASE + 0x24;
 	volatile uint32_t *QUADSPI_PSMAR	= (void *)QUADSPI_BASE + 0x28;
 	volatile uint32_t *QUADSPI_PIR		= (void *)QUADSPI_BASE + 0x2c;
-	volatile uint32_t *QUADSPI_LPTR		= (void *)QUADSPI_BASE + 0x30;
 	uint32_t reg;
 
 	*QUADSPI_CR = params->fifo_threshold;
@@ -156,9 +155,6 @@ void quadspi_init(struct qspi_params *params)
 	quadspi_wait_flag(QUADSPI_SR_TCF);
 
 	quadspi_busy_wait();
-
-	*QUADSPI_CR |= QUADSPI_CR_TCEN;
-	*QUADSPI_LPTR = 1;
 
 	*QUADSPI_CCR = QUADSPI_CCR_FMODE_MEMMAP | QUADSPI_CCR_DMODE_4_LINES |
 		QUADSPI_CCR_DCYC_N25Q12A | params->address_size |
