@@ -5,6 +5,8 @@
 #include "usart.h"
 #include "gpio.h"
 #include "mpu.h"
+#include "qspi.h"
+#include "start_kernel.h"
 
 static void *usart_base = (void *)USART1_BASE;
 static void *gpio_base = (void *)GPIOA_BASE;
@@ -36,6 +38,7 @@ void clock_setup(void)
 	volatile uint32_t *RCC_D2APB1HENR = (void *)(RCC_BASE_REG + 0xec);
 	volatile uint32_t *RCC_D2APB2ENR = (void *)(RCC_BASE_REG + 0xf0);
 	volatile uint32_t *RCC_D3APB1ENR = (void *)(RCC_BASE_REG + 0xf4);
+	volatile uint32_t *RCC_AHB3RST = (void *)(RCC_BASE_REG + 0x7c);
 	volatile uint32_t *FLASH_FACR = (void *)(FLASH_BASE);
 	volatile uint32_t *PWR_D3CR = (void *)(PWR_BASE + 0x18);
 	volatile uint32_t *PWR_CR3 = (void *)(PWR_BASE + 0xc);
@@ -106,6 +109,7 @@ void clock_setup(void)
 	divq = 2;
 	divr = 2;
 
+	/*  PLL SRC = HSE */
 	*RCC_PLLCKSELR |= (divm << 4 ) | 0x2;
 	*RCC_PLL1DIVR  |= ((divr - 1) << (24)) | ((divq - 1) << (16)) | ( (divp - 1) << 9) | (divn - 1);
 
@@ -122,7 +126,7 @@ void clock_setup(void)
 	*FLASH_FACR &=0xfffffff0;
 	*FLASH_FACR |= 0xa;
 
-	/* set HPRE (/2) DI clk --> 150MHz */
+	/* set HPRE (/2) DI clk --> 125MHz */
 	*RCC_D1CFGR |= 8;
 
 	/*  select PLL1 as clcok source */
@@ -130,7 +134,12 @@ void clock_setup(void)
 	while ((((*RCC_CFGR)&0x3) != 0x3)) {
 	}
 	/*  test for sdram: use pll1_q as fmc_k clk */
-	*RCC_D1CCIPR = 1;
+	*RCC_D1CCIPR = 1 | (3 << 4);
+
+	/* togle reset QSPI */
+	*RCC_AHB3RST |= (1 << 14);
+	*RCC_AHB3RST &= ~(1 << 14);
+
 }
 
 void ext_mem_setup(void)
@@ -336,6 +345,17 @@ static void clean_dcache(void)
 
 int main(void)
 {
+	struct qspi_params qspi_h743_params = {
+		.address_size = QUADSPI_CCR_ADSIZE_32BITS,
+		.fifo_threshold = QUADSPI_CR_FTHRES(0),
+		.sshift = QUADSPI_CR_SSHIFT,
+		.fsize = QUADSPI_DCR_FSIZE_128MB,
+		.prescaler = 0,
+		.dummy_cycle = 8,
+		.fsel = QUADSPI_CR_FSEL,
+		.dfm = QUADSPI_CR_DFM,
+	};
+
 	mpu_config(0xd0000000);
 
 	/* configure clocks */
@@ -343,6 +363,22 @@ int main(void)
 
 	/* configure external memory controler */
 	ext_mem_setup();
+
+	gpio_set_qspi(gpio_base, 'B', 2, GPIOx_PUPDR_NOPULL, 0x9); //CLK
+	/*  QSPI BANK1 */
+	gpio_set_qspi(gpio_base, 'G', 6, GPIOx_PUPDR_PULLUP, 0xa); //CS
+	gpio_set_qspi(gpio_base, 'F', 8, GPIOx_PUPDR_NOPULL, 0xa); //DO
+	gpio_set_qspi(gpio_base, 'F', 9, GPIOx_PUPDR_NOPULL, 0xa); //D1
+	gpio_set_qspi(gpio_base, 'F', 7, GPIOx_PUPDR_NOPULL, 0x9); //D2
+	gpio_set_qspi(gpio_base, 'F', 6, GPIOx_PUPDR_NOPULL, 0x9); //D3
+	/*  QSPI BANK2 */
+	gpio_set_qspi(gpio_base, 'C', 11, GPIOx_PUPDR_PULLUP, 0x9); //CS
+	gpio_set_qspi(gpio_base, 'H', 2, GPIOx_PUPDR_NOPULL, 0x9); //DO
+	gpio_set_qspi(gpio_base, 'H', 3, GPIOx_PUPDR_NOPULL, 0x9); //D1
+	gpio_set_qspi(gpio_base, 'G', 9, GPIOx_PUPDR_NOPULL, 0x9); //D2
+	gpio_set_qspi(gpio_base, 'G', 14, GPIOx_PUPDR_NOPULL, 0x9); //D3
+
+	quadspi_init(&qspi_h743_params, (void *)QUADSPI_BASE);
 
 	gpio_set_usart(gpio_base, 'B', 14, 4);
 	gpio_set_usart(gpio_base, 'B', 15, 4);
@@ -353,7 +389,7 @@ int main(void)
 	clean_dcache();
 	clean_icache();
 
-	while (1);
+	start_kernel();
 
 	return 0;
 }
