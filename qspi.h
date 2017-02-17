@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#define QUADSPI_BASE	0xa0001000
-
 /* QUADSPI_CR */
 #define QUADSPI_CR_EN				(1 << 0)
 #define QUADSPI_CR_TCEN				(1 << 3)
@@ -48,7 +46,6 @@
 #define QUADSPI_CCR_ADMOD_1_LINE	QUADSPI_CCR_ADMODE(1)
 #define QUADSPI_CCR_ADSIZE_24BITS	QUADSPI_CCR_ADSIZE(2)
 #define QUADSPI_CCR_ADSIZE_32BITS	QUADSPI_CCR_ADSIZE(3)
-#define QUADSPI_CCR_DCYC_N25Q12A	QUADSPI_CCR_DCYC(10)
 #define QUADSPI_CCR_DMODE_1_LINE	QUADSPI_CCR_DMODE(1)
 #define QUADSPI_CCR_DMODE_4_LINES	QUADSPI_CCR_DMODE(3)
 #define QUADSPI_CCR_FMODE_IND_WR	QUADSPI_CCR_FMODE(0)
@@ -76,8 +73,14 @@
 struct qspi_params {
 	uint32_t address_size;
 	uint32_t fifo_threshold;
+	uint32_t prescaler;
+	uint32_t sshift;
+	uint32_t fsel;
+	uint32_t dfm;
+	uint32_t dummy_cycle;
+	uint32_t fsize;
 };
 
-void quadspi_init(struct qspi_params *params);
+void quadspi_init(struct qspi_params *params, void *base);
 
 #endif /* _QSPI_H */

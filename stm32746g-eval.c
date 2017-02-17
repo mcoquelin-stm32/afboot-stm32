@@ -102,6 +102,12 @@ int main(void)
 	struct qspi_params qspi_746_params = {
 		.address_size = QUADSPI_CCR_ADSIZE_32BITS,
 		.fifo_threshold = QUADSPI_CR_FTHRES(3),
+		.sshift = QUADSPI_CR_SSHIFT,
+		.fsize = QUADSPI_DCR_FSIZE_64MB,
+		.prescaler = 1,
+		.dummy_cycle = 10,
+		.fsel = 0,
+		.dfm = 0,
 	};
 	int i;
 
@@ -205,7 +211,7 @@ int main(void)
 	gpio_set_qspi(gpio_base, 'F', 7, GPIOx_PUPDR_NOPULL, 0x9); //D2
 	gpio_set_qspi(gpio_base, 'F', 6, GPIOx_PUPDR_NOPULL, 0x9); //D3
 
-	quadspi_init(&qspi_746_params);
+	quadspi_init(&qspi_746_params, (void *)QUADSPI_BASE);
 
 	gpio_set_usart(gpio_base,'A', 9, 7);
 	gpio_set_usart(gpio_base,'A', 10, 7);
