@@ -6,6 +6,7 @@
 #include "gpio.h"
 #include "mpu.h"
 #include "start_kernel.h"
+#include "qspi.h"
 
 #define CONFIG_HSE_HZ	25000000
 #define CONFIG_PLL_M	25
@@ -32,6 +33,7 @@ static void clock_setup(void)
 	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
 	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
+	volatile uint32_t *RCC_AHB3RST = (void *)(RCC_BASE + 0x18);
 	uint32_t val;
 
 
@@ -69,9 +71,13 @@ static void clock_setup(void)
 	/*  Enable all clocks, unused ones will be gated at end of kernel boot */
 	*RCC_AHB1ENR |= 0x7ef417ff;
 	*RCC_AHB2ENR |= 0xf1;
-	*RCC_AHB3ENR |= 0x1;
+	*RCC_AHB3ENR |= 0x3;
 	*RCC_APB1ENR |= 0xf6fec9ff;
 	*RCC_APB2ENR |= 0x4777f33;
+
+	/* togle reset QSPI */
+	*RCC_AHB3RST |= 0x2;
+	*RCC_AHB3RST &= 0xfffffffd;
 }
 
 
@@ -92,6 +98,10 @@ int main(void)
 	volatile uint32_t *FMC_SDTR1 = (void *)(FMC_BASE + 0x148);
 	volatile uint32_t *FMC_SDCMR = (void *)(FMC_BASE + 0x150);
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
+	struct qspi_params qspi_746_params = {
+		.address_size = QUADSPI_CCR_ADSIZE_32BITS,
+		.fifo_threshold = QUADSPI_CR_FTHRES(3),
+	};
 	int i;
 
 	mpu_config(0xc0000000);
@@ -187,13 +197,21 @@ int main(void)
 	*FMC_SDRTR |= 2812<<1; // refresh rate
 	*FMC_SDCR1 &= 0xFFFFFDFF;
 
+	gpio_set_qspi('B', 6, GPIOx_PUPDR_PULLUP, 0xa); //CS
+	gpio_set_qspi('B', 2, GPIOx_PUPDR_NOPULL, 0x9); //CLK
+	gpio_set_qspi('F', 8, GPIOx_PUPDR_NOPULL, 0xa); //DO
+	gpio_set_qspi('F', 9, GPIOx_PUPDR_NOPULL, 0xa); //D1
+	gpio_set_qspi('F', 7, GPIOx_PUPDR_NOPULL, 0x9); //D2
+	gpio_set_qspi('F', 6, GPIOx_PUPDR_NOPULL, 0x9); //D3
+
+	quadspi_init(&qspi_746_params);
+
 	gpio_set_usart('A', 9);
 	gpio_set_usart('A', 10);
 
 	usart_setup(usart_base, 108000000);
 	usart_putch(usart_base, '.');
 
-	while (1);
 	start_kernel();
 
 	return 0;
