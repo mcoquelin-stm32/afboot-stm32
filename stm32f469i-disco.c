@@ -6,6 +6,7 @@
 #include "gpio.h"
 #include "mpu.h"
 #include "qspi.h"
+#include "start_kernel.h"
 
 #define CONFIG_HSE_HZ	8000000
 #define CONFIG_PLL_M	8
@@ -95,8 +96,6 @@ static void clock_setup(void)
 
 }
 
-
-
 static void fmc_wait_busy(void)
 {
 	volatile uint32_t *FMC_SDSR = (void *)(FMC_BASE + 0x158);
@@ -104,14 +103,6 @@ static void fmc_wait_busy(void)
 	while ((*FMC_SDSR & FMC_SDSR_BUSY)) {
 	}
 }
-
-void start_kernel(void)
-{
-	void (*kernel)(uint32_t reserved, uint32_t mach, uint32_t dt) = (void (*)(uint32_t, uint32_t, uint32_t))(0x08008000 | 1);
-
-	kernel(0, ~0UL, 0x08004000);
-}
-
 
 int main(void)
 {

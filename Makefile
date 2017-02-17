@@ -7,20 +7,22 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 SIZE = $(CROSS_COMPILE)size
 GDB = $(CROSS_COMPILE)gdb
 OPENOCD = openocd
+KERNEL_ADDR?=0x08008000
+DTB_ADDR?=0x08004000
 
 CFLAGS := -mthumb -mcpu=cortex-m4
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 LINKERFLAGS := -nostartfiles --gc-sections
 
-obj-y += gpio.o mpu.o qspi.o
+obj-y += gpio.o mpu.o qspi.o start_kernel.o
 obj-f4 += $(obj-y) usart-f4.o
 obj-f7 += $(obj-y) usart-f7.o
 
 all: stm32f429i-disco stm32429i-eval stm32f469i-disco stm32746g-eval
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) -DKERNEL_ADDR=$(KERNEL_ADDR) -DDTB_ADDR=$(DTB_ADDR) $< -o $@
 
 stm32f429i-disco: stm32f429i-disco.o $(obj-f4)
 	$(LD) -T stm32f429.lds $(LINKERFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-f4)
