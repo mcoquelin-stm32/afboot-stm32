@@ -5,6 +5,8 @@
 #include "usart.h"
 #include "gpio.h"
 #include "mpu.h"
+#include "start_kernel.h"
+#include "qspi.h"
 
 #define CONFIG_HSE_HZ	25000000
 #define CONFIG_PLL_M	25
@@ -19,6 +21,7 @@
 #endif
 
 static void *usart_base = (void *)USART1_BASE;
+static void *gpio_base = (void *)GPIOA_BASE;
 
 static void clock_setup(void)
 {
@@ -31,6 +34,7 @@ static void clock_setup(void)
 	volatile uint32_t *RCC_AHB3ENR = (void *)(RCC_BASE + 0x38);
 	volatile uint32_t *RCC_APB1ENR = (void *)(RCC_BASE + 0x40);
 	volatile uint32_t *RCC_APB2ENR = (void *)(RCC_BASE + 0x44);
+	volatile uint32_t *RCC_AHB3RST = (void *)(RCC_BASE + 0x18);
 	uint32_t val;
 
 
@@ -68,9 +72,13 @@ static void clock_setup(void)
 	/*  Enable all clocks, unused ones will be gated at end of kernel boot */
 	*RCC_AHB1ENR |= 0x7ef417ff;
 	*RCC_AHB2ENR |= 0xf1;
-	*RCC_AHB3ENR |= 0x1;
+	*RCC_AHB3ENR |= 0x3;
 	*RCC_APB1ENR |= 0xf6fec9ff;
 	*RCC_APB2ENR |= 0x4777f33;
+
+	/* togle reset QSPI */
+	*RCC_AHB3RST |= 0x2;
+	*RCC_AHB3RST &= 0xfffffffd;
 }
 
 
@@ -83,13 +91,6 @@ static void fmc_wait_busy(void)
 	}
 }
 
-void start_kernel(void)
-{
-	void (*kernel)(uint32_t reserved, uint32_t mach, uint32_t dt) = (void (*)(uint32_t, uint32_t, uint32_t))(0x08008000 | 1);
-
-	kernel(0, ~0UL, 0x08004000);
-}
-
 int main(void)
 {
 	volatile uint32_t *FLASH_KEYR = (void *)(FLASH_BASE + 0x04);
@@ -98,6 +99,16 @@ int main(void)
 	volatile uint32_t *FMC_SDTR1 = (void *)(FMC_BASE + 0x148);
 	volatile uint32_t *FMC_SDCMR = (void *)(FMC_BASE + 0x150);
 	volatile uint32_t *FMC_SDRTR = (void *)(FMC_BASE + 0x154);
+	struct qspi_params qspi_746_params = {
+		.address_size = QUADSPI_CCR_ADSIZE_32BITS,
+		.fifo_threshold = QUADSPI_CR_FTHRES(3),
+		.sshift = QUADSPI_CR_SSHIFT,
+		.fsize = QUADSPI_DCR_FSIZE_64MB,
+		.prescaler = 1,
+		.dummy_cycle = 10,
+		.fsel = 0,
+		.dfm = 0,
+	};
 	int i;
 
 	mpu_config(0xc0000000);
@@ -112,67 +123,67 @@ int main(void)
 
 	clock_setup();
 
-	gpio_set_fmc('D', 0); //D2
-	gpio_set_fmc('D', 1); //D3
-	gpio_set_fmc('D', 8); //D13
-	gpio_set_fmc('D', 9); //D14
-	gpio_set_fmc('D', 10); //D15
-	gpio_set_fmc('D', 11); //A16
-	gpio_set_fmc('D', 12); //A17
-	gpio_set_fmc('D', 13); //A18
-	gpio_set_fmc('D', 14); //D0
-	gpio_set_fmc('D', 15); //D1
-	gpio_set_fmc('E', 0); //NBL0
-	gpio_set_fmc('E', 1); //NBL1
-	gpio_set_fmc('E', 7); //D4
-	gpio_set_fmc('E', 8); //D5
-	gpio_set_fmc('E', 9); //D6
-	gpio_set_fmc('E', 10); //D7
-	gpio_set_fmc('E', 11); //D8
-	gpio_set_fmc('E', 12); //D9
-	gpio_set_fmc('E', 13); //D10
-	gpio_set_fmc('E', 14); //D11
-	gpio_set_fmc('E', 15); //D12
-	gpio_set_fmc('F', 0); //A0
-	gpio_set_fmc('F', 1); //A1
-	gpio_set_fmc('F', 2); //A2
-	gpio_set_fmc('F', 3); //A3
-	gpio_set_fmc('F', 4); //A4
-	gpio_set_fmc('F', 5); //A5
-	gpio_set_fmc('F', 11); //SDNRAS
-	gpio_set_fmc('F', 12); //A6
-	gpio_set_fmc('F', 13); //A7
-	gpio_set_fmc('F', 14); //A8
-	gpio_set_fmc('F', 15); //A9
-	gpio_set_fmc('G', 0); //A10
-	gpio_set_fmc('G', 1); //A11
-	gpio_set_fmc('G', 2); //A12
-	gpio_set_fmc('G', 3); //A13
-	gpio_set_fmc('G', 4); //A14
-	gpio_set_fmc('G', 5); //A15
-	gpio_set_fmc('G', 8); //SDCLK
-	gpio_set_fmc('G', 15); //SDNCAS
-	gpio_set_fmc('H', 2); //SDCKE0
-	gpio_set_fmc('H', 3); //SDNE0
-	gpio_set_fmc('H', 5); //SDNWE
-	gpio_set_fmc('H', 8); //D16
-	gpio_set_fmc('H', 9); //D17
-	gpio_set_fmc('H', 10); //D18
-	gpio_set_fmc('H', 11); //D19
-	gpio_set_fmc('H', 12); //D20
-	gpio_set_fmc('H', 13); //D21
-	gpio_set_fmc('H', 14); //D22
-	gpio_set_fmc('H', 15); //D23
-	gpio_set_fmc('I', 0); //D24
-	gpio_set_fmc('I', 1); //D25
-	gpio_set_fmc('I', 2); //D26
-	gpio_set_fmc('I', 3); //D27
-	gpio_set_fmc('I', 4); //NBL2
-	gpio_set_fmc('I', 5); //NBL3
-	gpio_set_fmc('I', 6); //D28
-	gpio_set_fmc('I', 7); //D29
-	gpio_set_fmc('I', 9); //D30
-	gpio_set_fmc('I', 10); //D31
+	gpio_set_fmc(gpio_base, 'D', 0); //D2
+	gpio_set_fmc(gpio_base, 'D', 1); //D3
+	gpio_set_fmc(gpio_base, 'D', 8); //D13
+	gpio_set_fmc(gpio_base, 'D', 9); //D14
+	gpio_set_fmc(gpio_base, 'D', 10); //D15
+	gpio_set_fmc(gpio_base, 'D', 11); //A16
+	gpio_set_fmc(gpio_base, 'D', 12); //A17
+	gpio_set_fmc(gpio_base, 'D', 13); //A18
+	gpio_set_fmc(gpio_base, 'D', 14); //D0
+	gpio_set_fmc(gpio_base, 'D', 15); //D1
+	gpio_set_fmc(gpio_base,'E', 0); //NBL0
+	gpio_set_fmc(gpio_base,'E', 1); //NBL1
+	gpio_set_fmc(gpio_base, 'E', 7); //D4
+	gpio_set_fmc(gpio_base, 'E', 8); //D5
+	gpio_set_fmc(gpio_base, 'E', 9); //D6
+	gpio_set_fmc(gpio_base, 'E', 10); //D7
+	gpio_set_fmc(gpio_base, 'E', 11); //D8
+	gpio_set_fmc(gpio_base, 'E', 12); //D9
+	gpio_set_fmc(gpio_base, 'E', 13); //D10
+	gpio_set_fmc(gpio_base, 'E', 14); //D11
+	gpio_set_fmc(gpio_base, 'E', 15); //D12
+	gpio_set_fmc(gpio_base, 'F', 0); //A0
+	gpio_set_fmc(gpio_base, 'F', 1); //A1
+	gpio_set_fmc(gpio_base, 'F', 2); //A2
+	gpio_set_fmc(gpio_base, 'F', 3); //A3
+	gpio_set_fmc(gpio_base, 'F', 4); //A4
+	gpio_set_fmc(gpio_base, 'F', 5); //A5
+	gpio_set_fmc(gpio_base, 'F', 11); //SDNRAS
+	gpio_set_fmc(gpio_base, 'F', 12); //A6
+	gpio_set_fmc(gpio_base, 'F', 13); //A7
+	gpio_set_fmc(gpio_base, 'F', 14); //A8
+	gpio_set_fmc(gpio_base, 'F', 15); //A9
+	gpio_set_fmc(gpio_base, 'G', 0); //A10
+	gpio_set_fmc(gpio_base, 'G', 1); //A11
+	gpio_set_fmc(gpio_base, 'G', 2); //A12
+	gpio_set_fmc(gpio_base, 'G', 3); //A13
+	gpio_set_fmc(gpio_base, 'G', 4); //A14
+	gpio_set_fmc(gpio_base, 'G', 5); //A15
+	gpio_set_fmc(gpio_base, 'G', 8); //SDCLK
+	gpio_set_fmc(gpio_base, 'G', 15); //SDNCAS
+	gpio_set_fmc(gpio_base, 'H', 2); //SDCKE0
+	gpio_set_fmc(gpio_base, 'H', 3); //SDNE0
+	gpio_set_fmc(gpio_base, 'H', 5); //SDNWE
+	gpio_set_fmc(gpio_base, 'H', 8); //D16
+	gpio_set_fmc(gpio_base, 'H', 9); //D17
+	gpio_set_fmc(gpio_base, 'H', 10); //D18
+	gpio_set_fmc(gpio_base, 'H', 11); //D19
+	gpio_set_fmc(gpio_base, 'H', 12); //D20
+	gpio_set_fmc(gpio_base, 'H', 13); //D21
+	gpio_set_fmc(gpio_base, 'H', 14); //D22
+	gpio_set_fmc(gpio_base, 'H', 15); //D23
+	gpio_set_fmc(gpio_base, 'I', 0); //D24
+	gpio_set_fmc(gpio_base, 'I', 1); //D25
+	gpio_set_fmc(gpio_base, 'I', 2); //D26
+	gpio_set_fmc(gpio_base, 'I', 3); //D27
+	gpio_set_fmc(gpio_base, 'I', 4); //NBL2
+	gpio_set_fmc(gpio_base, 'I', 5); //NBL3
+	gpio_set_fmc(gpio_base, 'I', 6); //D28
+	gpio_set_fmc(gpio_base, 'I', 7); //D29
+	gpio_set_fmc(gpio_base, 'I', 9); //D30
+	gpio_set_fmc(gpio_base, 'I', 10); //D31
 	*FMC_SDCR1 = 0x000019E5;
 	*FMC_SDTR1 = 0x01116361;
 
@@ -193,13 +204,21 @@ int main(void)
 	*FMC_SDRTR |= 2812<<1; // refresh rate
 	*FMC_SDCR1 &= 0xFFFFFDFF;
 
-	gpio_set_usart('A', 9);
-	gpio_set_usart('A', 10);
+	gpio_set_qspi(gpio_base, 'B', 6, GPIOx_PUPDR_PULLUP, 0xa); //CS
+	gpio_set_qspi(gpio_base, 'B', 2, GPIOx_PUPDR_NOPULL, 0x9); //CLK
+	gpio_set_qspi(gpio_base, 'F', 8, GPIOx_PUPDR_NOPULL, 0xa); //DO
+	gpio_set_qspi(gpio_base, 'F', 9, GPIOx_PUPDR_NOPULL, 0xa); //D1
+	gpio_set_qspi(gpio_base, 'F', 7, GPIOx_PUPDR_NOPULL, 0x9); //D2
+	gpio_set_qspi(gpio_base, 'F', 6, GPIOx_PUPDR_NOPULL, 0x9); //D3
+
+	quadspi_init(&qspi_746_params, (void *)QUADSPI_BASE);
+
+	gpio_set_usart(gpio_base,'A', 9, 7);
+	gpio_set_usart(gpio_base,'A', 10, 7);
 
 	usart_setup(usart_base, 108000000);
 	usart_putch(usart_base, '.');
 
-	while (1);
 	start_kernel();
 
 	return 0;
