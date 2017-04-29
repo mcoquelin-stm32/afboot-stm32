@@ -98,28 +98,30 @@ void quadspi_init(struct qspi_params *params, void *base)
 
 	quadspi_wait_flag(base, QUADSPI_SR_SMF);
 
-	/* Enter 4-bytes address mode */
-	quadspi_write_enable(base);
+	/* Enter 4-bytes address mode for 32bit memories*/
+	if(params->address_size == QUADSPI_CCR_ADSIZE_32BITS) {
+		quadspi_write_enable(base);
 
-	quadspi_busy_wait(base);
+		quadspi_busy_wait(base);
 
-	*QUADSPI_CCR = QUADSPI_CCR_FMODE_IND_WR | QUADSPI_CCR_IDMOD_1_LINE |
-		ENTER_4_BYTE_ADDR_MODE_CMD;
+		*QUADSPI_CCR = QUADSPI_CCR_FMODE_IND_WR | QUADSPI_CCR_IDMOD_1_LINE |
+			ENTER_4_BYTE_ADDR_MODE_CMD;
 
-	quadspi_wait_flag(base, QUADSPI_SR_TCF);
+		quadspi_wait_flag(base, QUADSPI_SR_TCF);
 
-	quadspi_busy_wait(base);
+		quadspi_busy_wait(base);
 
-	*QUADSPI_PSMAR = 0;
-	*QUADSPI_PSMKR = N25Q512A_SR_WIP;
-	*QUADSPI_PIR = 0x10;
+		*QUADSPI_PSMAR = 0;
+		*QUADSPI_PSMKR = N25Q512A_SR_WIP;
+		*QUADSPI_PIR = 0x10;
 
-	*QUADSPI_CR |= QUADSPI_CR_AMPS;
-	*QUADSPI_DLR = 0;
-	*QUADSPI_CCR = QUADSPI_CCR_FMODE_AUTO_POLL | QUADSPI_CCR_DMODE_1_LINE |
-		QUADSPI_CCR_IDMOD_1_LINE | READ_STATUS_REG_CMD;
+		*QUADSPI_CR |= QUADSPI_CR_AMPS;
+		*QUADSPI_DLR = 0;
+		*QUADSPI_CCR = QUADSPI_CCR_FMODE_AUTO_POLL | QUADSPI_CCR_DMODE_1_LINE |
+			QUADSPI_CCR_IDMOD_1_LINE | READ_STATUS_REG_CMD;
 
-	quadspi_wait_flag(base, QUADSPI_SR_SMF);
+		quadspi_wait_flag(base, QUADSPI_SR_SMF);
+	}
 
 	/* Configure dummy cycles on memory side */
 
