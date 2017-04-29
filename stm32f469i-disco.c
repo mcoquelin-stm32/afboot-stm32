@@ -118,7 +118,7 @@ int main(void)
 		.address_size = QUADSPI_CCR_ADSIZE_24BITS,
 		.fifo_threshold = QUADSPI_CR_FTHRES(1),
 		.sshift = QUADSPI_CR_SSHIFT,
-		.fsize = QUADSPI_DCR_FSIZE_64MB,
+		.fsize = QUADSPI_DCR_FSIZE_16MB,
 		.prescaler = 1,
 		.dummy_cycle = 10,
 		.fsel = 0,
