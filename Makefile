@@ -13,6 +13,7 @@ DTB_ADDR?=0x08004000
 CFLAGS := -mthumb -mcpu=cortex-m4
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
+CFLAGS += -fno-builtin
 LINKERFLAGS := -nostartfiles --gc-sections
 
 obj-y += gpio.o mpu.o qspi.o start_kernel.o
