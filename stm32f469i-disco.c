@@ -8,6 +8,7 @@
 #include "qspi.h"
 #include "start_kernel.h"
 
+#define KERNEL_ADDR     0x08010000
 #define CONFIG_HSE_HZ	8000000
 #define CONFIG_PLL_M	8
 #define CONFIG_PLL_N	360
@@ -105,6 +106,13 @@ static void fmc_wait_busy(void)
 	}
 }
 
+void start_kernel(void)
+{
+	void (*kernel)(uint32_t reserved, uint32_t mach, uint32_t dt) = (void (*)(uint32_t, uint32_t, uint32_t))(KERNEL_ADDR | 1);
+
+	kernel(0, ~0UL, 0x08004000);
+}
+
 int main(void)
 {
 	volatile uint32_t *FLASH_KEYR = (void *)(FLASH_BASE + 0x04);
@@ -127,7 +135,7 @@ int main(void)
 
 	int i;
 
-	mpu_config(0x0);
+	mpu_config(0xc0000000);
 
 	if (*FLASH_CR & FLASH_CR_LOCK) {
 		*FLASH_KEYR = 0x45670123;
@@ -228,8 +236,6 @@ int main(void)
 
 	usart_setup(usart_base, 45000000);
 	usart_putch(usart_base, '.');
-
-	*SYSCFG_MEMRMP = 0x4;
 
 	start_kernel();
 
