@@ -14,7 +14,7 @@ CFLAGS := -mthumb -mcpu=cortex-m4
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Os -std=gnu99 -Wall
 CFLAGS += -fno-builtin
-LINKERFLAGS := -nostartfiles --gc-sections
+LINKERFLAGS := --gc-sections
 
 obj-y += gpio.o mpu.o qspi.o start_kernel.o
 obj-f4 += $(obj-y) usart-f4.o
